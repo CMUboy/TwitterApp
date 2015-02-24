@@ -42,16 +42,44 @@ class TweetDetailViewController: UITableViewController {
         // Dispose of any resources that can be recreated.
     }
 
+    @IBAction func retweet(sender: AnyObject) {
+        TwitterClient.sharedInstance.retweetWithCompletion(tweet!) {
+            (tweet: Tweet?, error: NSError?) in
+            if tweet != nil {
+            } else {
+                // handle error
+            }
+        }
+    }
+    
+    @IBAction func markFavorite(sender: AnyObject) {
+        TwitterClient.sharedInstance.favoriteWithCompletion(tweet!) {
+            (tweet: Tweet?, error: NSError?) in
+            if tweet != nil {
+            } else {
+                // handle error
+            }
+        }
+    }
+    
+    @IBAction func replyTweet(sender: AnyObject) {
+        performSegueWithIdentifier("ReplyToTweet", sender: self)
+    }
+    
     // MARK: - Table view data source
 
-    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         // Get the new view controller using [segue destinationViewController].
         // Pass the selected object to the new view controller.
-    }
-    */
 
+        if segue.identifier == "ReplyToTweet" {
+            let vc = segue.destinationViewController as NewTweetViewController
+            vc.user = User.currentUser
+            vc.isReply = true
+        }
+    }
+    
 }

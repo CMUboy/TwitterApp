@@ -16,6 +16,9 @@ class TwitterClient: BDBOAuth1RequestOperationManager {
     var loginCompletion: ((user: User?, error: NSError?) -> ())?
     var homeTimelineCompletion: ((tweets: [Tweet]?, error: NSError?) -> ())?
     var tweetCompletion: ((tweet: Tweet?, error: NSError?) -> ())?
+    var replyCompletion: ((tweet: Tweet?, error: NSError?) -> ())?
+    var retweetCompletion: ((tweet: Tweet?, error: NSError?) -> ())?
+    var favoriteCompletion: ((tweet: Tweet?, error: NSError?) -> ())?
     
     class var sharedInstance: TwitterClient {
         struct Static {
@@ -58,10 +61,6 @@ class TwitterClient: BDBOAuth1RequestOperationManager {
             parameters: params,
             success: {(operation: AFHTTPRequestOperation!, response: AnyObject!) -> Void in
                 let tweets = Tweet.tweetsWithArray(response as [NSDictionary])
-                //println("Tweets: \(tweets)")
-//                for tweet in tweets {
-//                    println("text: \(tweet.text), created: \(tweet.createdAt)")
-//                }
                 self.homeTimelineCompletion?(tweets: tweets, error: nil)
             },
             failure: {(operation: AFHTTPRequestOperation!, error: NSError!) -> Void in
@@ -74,17 +73,35 @@ class TwitterClient: BDBOAuth1RequestOperationManager {
     // https://api.twitter.com/1.1/statuses/update.json
     
     func tweetWithCompletion(tweet: Tweet, completion: (tweet: Tweet?, error: NSError?) -> ()) {
+        self.tweetCompletion = completion
+        
         POST(
             "1.1/statuses/update.json",
             parameters: ["status": tweet.text!],
             success: {(operation: AFHTTPRequestOperation!, response: AnyObject!) -> Void in
                 println(response)
                 let newTweet: Tweet? = nil
-                //let tweets = Tweet.tweetsWithArray(response as [NSDictionary])
-                //println("Tweets: \(tweets)")
-                //                for tweet in tweets {
-                //                    println("text: \(tweet.text), created: \(tweet.createdAt)")
-                //                }
+                self.tweetCompletion?(tweet: newTweet, error: nil)
+            },
+            failure: {(operation: AFHTTPRequestOperation!, error: NSError!) -> Void in
+                println("Error updating status.")
+                println(error)
+                self.tweetCompletion?(tweet: nil, error: error)
+            }
+        )
+    }
+
+    // https://api.twitter.com/1.1/statuses/update.json
+    
+    func replyWithCompletion(tweet: Tweet, completion: (tweet: Tweet?, error: NSError?) -> ()) {
+        self.replyCompletion = completion
+        
+        POST(
+            "1.1/statuses/update.json",
+            parameters: ["status": tweet.text!, "in_reply_to_status_id": tweet.idString!],
+            success: {(operation: AFHTTPRequestOperation!, response: AnyObject!) -> Void in
+                println(response)
+                let newTweet: Tweet? = nil
                 self.tweetCompletion?(tweet: newTweet, error: nil)
             },
             failure: {(operation: AFHTTPRequestOperation!, error: NSError!) -> Void in
@@ -98,9 +115,45 @@ class TwitterClient: BDBOAuth1RequestOperationManager {
     // https://api.twitter.com/1.1/statuses/retweet/:id.json
 
     func retweetWithCompletion(tweet: Tweet, completion: (tweet: Tweet?, error: NSError?) -> ()) {
+        self.retweetCompletion = completion
         
+        POST(
+            "1.1/statuses/retweet/\(tweet.idString!).json",
+            parameters: nil,
+            success: {(operation: AFHTTPRequestOperation!, response: AnyObject!) -> Void in
+                println(response)
+                let newTweet: Tweet? = nil
+                self.retweetCompletion?(tweet: newTweet, error: nil)
+            },
+            failure: {(operation: AFHTTPRequestOperation!, error: NSError!) -> Void in
+                println("Error updating status.")
+                println(error)
+                self.retweetCompletion?(tweet: nil, error: error)
+            }
+        )
     }
 
+    // https://api.twitter.com/1.1/favorites/create.json?id=243138128959913986
+    
+    func favoriteWithCompletion(tweet: Tweet, completion: (tweet: Tweet?, error: NSError?) -> ()) {
+        self.favoriteCompletion = completion
+        
+        POST(
+            "1.1/favorites/create.json?id=\(tweet.idString!)",
+            parameters: nil,
+            success: {(operation: AFHTTPRequestOperation!, response: AnyObject!) -> Void in
+                println(response)
+                let newTweet: Tweet? = nil
+                self.favoriteCompletion?(tweet: newTweet, error: nil)
+            },
+            failure: {(operation: AFHTTPRequestOperation!, error: NSError!) -> Void in
+                println("Error updating status.")
+                println(error)
+                self.favoriteCompletion?(tweet: nil, error: error)
+            }
+        )
+    }
+    
     func openURL(url: NSURL) {
         fetchAccessTokenWithPath(
             "oauth/access_token",

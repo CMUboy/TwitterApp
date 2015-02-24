@@ -2,7 +2,7 @@
 
 This is a basic twitter app to read and compose tweets the [Twitter API](https://apps.twitter.com/).
 
-Time spent: 13
+Time spent: 16
 
 ### Features
 
@@ -19,7 +19,7 @@ Time spent: 13
 
 Notes:
 
-* The retweet, favorite, and reply features are not implemented. 
+* The retweet, favorite, and reply features are functional, but the UI is not polished. 
 
 
 #### Optional

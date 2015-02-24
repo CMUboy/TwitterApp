@@ -16,6 +16,7 @@ class NewTweetViewController: UITableViewController {
     
     var user: User?
     var newTweet: Tweet?
+    var isReply: Bool?
     
     override func viewDidLoad() {
         super.viewDidLoad()

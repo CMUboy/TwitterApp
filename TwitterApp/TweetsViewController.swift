@@ -24,6 +24,9 @@ class TweetsViewController: UITableViewController {
         refreshControl!.addTarget(self, action: "onRefresh", forControlEvents: UIControlEvents.ValueChanged)
         tableView.insertSubview(refreshControl!, atIndex: 0)
         
+        tableView.estimatedRowHeight = 100.0
+        tableView.rowHeight = UITableViewAutomaticDimension
+        
         reloadTableData()
     }
 
@@ -63,13 +66,27 @@ class TweetsViewController: UITableViewController {
         let vc = segue.sourceViewController as NewTweetViewController
         
         if let tweet = vc.newTweet {
-            TwitterClient.sharedInstance.tweetWithCompletion(tweet) {
-                (tweet: Tweet?, error: NSError?) in
-                if tweet != nil {
-                    self.tweets.insert(tweet!, atIndex: 0)
-                    self.tableView.reloadData()
+            if let reply = vc.isReply {
+                if reply {
+                    TwitterClient.sharedInstance.replyWithCompletion(tweet) {
+                        (tweet: Tweet?, error: NSError?) in
+                        if tweet != nil {
+                            self.tweets.insert(tweet!, atIndex: 0)
+                            self.tableView.reloadData()
+                        } else {
+                            // handle error
+                        }
+                    }
                 } else {
-                    // handle error
+                    TwitterClient.sharedInstance.tweetWithCompletion(tweet) {
+                        (tweet: Tweet?, error: NSError?) in
+                        if tweet != nil {
+                            self.tweets.insert(tweet!, atIndex: 0)
+                            self.tableView.reloadData()
+                        } else {
+                            // handle error
+                        }
+                    }
                 }
             }
         }
@@ -158,6 +175,7 @@ class TweetsViewController: UITableViewController {
         if segue.identifier == "NewTweet" {
             let vc = segue.destinationViewController as NewTweetViewController
             vc.user = User.currentUser
+            vc.isReply = false
         }
     }
 
